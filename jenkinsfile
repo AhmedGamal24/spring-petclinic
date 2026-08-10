@@ -25,17 +25,16 @@ pipeline{
 
         stage("Docker Push"){
             steps{
-                withCredentials(
-                    usernamePassword[(
+                withCredentials([
+                    usernamePassword(
                         credentialsId : 'dockerhub-creds',
                         usernameVariable : 'DockerUser',
-                        passwordVariable : 'DosckerPass'
+                        passwordVariable : 'DockerPass'
                     )])
                 {
-                    sh 'echo $DockerPass | docker login -U $DockerUser --password-stdin'
+                    sh 'echo $DockerPass | docker login -u $DockerUser --password-stdin'
                     sh 'docker push ahmedabohagar/petclinic:$BUILD_NUMBER'
-                }
-                
+                }        
             }
         }
     }
