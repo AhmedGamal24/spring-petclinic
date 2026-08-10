@@ -1,5 +1,5 @@
 pipeline{
-    agent any
+    agen any
     tools {
         jdk 'JDK17'
         maven 'Maven3'
@@ -10,12 +10,33 @@ pipeline{
                 git branch : "main" , url: "https://github.com/AhmedGamal24/spring-petclinic.git"
                 }
             }
+
         stage("test & build"){
             steps{
                 sh 'mvn clean test'
             }
         }
-    }
 
-    
+        stage("Docker Build"){
+            steps{
+                sh "docker build -t ahmedabohagar/petclinic:${BUILD_NUMBER} ."
+            }
+        }
+
+        stage("Docker Push"){
+            steps{
+                withCredentials(
+                    usernamePassword[(
+                        credentialsId : 'dockerhub-creds',
+                        usernameVariable : 'DockerUser'
+                        passwordVariable : 'DosckerPass'
+                    )])
+                {
+                    sh 'echo $DockerPass | docker login -U $DockerUser --password-stdin'
+                    sh 'docker push ahmedabohagar/petclinic:$BUILD_NUMBER'
+                }
+                
+            }
+        }
+    }
 }
