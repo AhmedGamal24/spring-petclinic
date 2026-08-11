@@ -4,6 +4,11 @@ pipeline{
         jdk 'JDK17'
         maven 'Maven3'
     }
+    parameters{
+        choice(choices:['dev','staging','prod'],description:'select working environment',name:'environment')
+        string(defaultValue:'',description:"image tag",name:'image_tag')
+        booleanParam(defaultValue:true,description:'do you want run tests',name:'run_tests')
+    }
     stages{
         stage("checkout"){
             steps{
@@ -13,13 +18,21 @@ pipeline{
 
         stage("test & build"){
             steps{
-                sh 'mvn clean test'
+                script{
+                    if(params.run_tests==true)
+                    {
+                        sh 'mvn clean test'
+                    }
+                }
             }
         }
 
         stage("Docker Build"){
             steps{
-                sh "docker build -t ahmedabohagar/petclinic:${BUILD_NUMBER} ."
+                script{
+                    env.final_tag = params.image_tag?.trim() ? params.image_tag : env.BUILD_NUMBER  
+                    sh "docker build -t ahmedabohagar/petclinic:${env.final_tag} ."
+                }
             }
         }
 
@@ -32,8 +45,8 @@ pipeline{
                         passwordVariable : 'DockerPass'
                     )])
                 {
-                    sh 'echo $DockerPass | docker login -u $DockerUser --password-stdin'
-                    sh 'docker push ahmedabohagar/petclinic:$BUILD_NUMBER'
+                    sh "echo $DockerPass | docker login -u $DockerUser --password-stdin"
+                    sh "docker push ahmedabohagar/petclinic:${env.final_tag}"
                 }        
             }
         }
