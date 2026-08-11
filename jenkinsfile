@@ -31,7 +31,7 @@ pipeline{
             steps{
                 script{
                     env.final_tag = params.image_tag?.trim() ? params.image_tag : env.BUILD_NUMBER  
-                    sh "docker build -t ahmedabohagar/petclinic:${env.final_tag} ."
+                    sh "docker build -t ahmedabohagar/petclinic:${params.environment}${env.final_tag} ."
                 }
             }
         }
